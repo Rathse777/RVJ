@@ -441,6 +441,88 @@ if (popoutThumbnails) {
     });
 }
 
+// ============================================================
+// BÚSQUEDA EN VIVO
+// ============================================================
+const searchInput = document.getElementById('search-input');
+const searchClear = document.getElementById('search-clear');
+
+function normalizeText(str) {
+    return (str || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, ''); // quita tildes
+}
+
+function filterProducts(term) {
+    if (!productsGrid) return;
+
+    const currentCategory = getCategoryFromURL();
+    if (currentCategory === 'Inicio') return;
+
+    const base = currentCategory === 'Todos'
+        ? PRODUCTS
+        : PRODUCTS.filter(p => p.category === currentCategory);
+
+    const q = normalizeText(term.trim());
+
+    // Sin término → catálogo normal
+    if (!q) {
+        renderCatalog();
+        return;
+    }
+
+    const matches = base.filter(p =>
+        normalizeText(p.name).includes(q) ||
+        normalizeText(p.category).includes(q) ||
+        normalizeText(p.description).includes(q)
+    );
+
+    if (matches.length === 0) {
+        productsGrid.innerHTML =
+            `<p class="no-results-msg">No encontramos tesoros para “${term}” ✧<br>Prueba con otra palabra.</p>`;
+        return;
+    }
+
+    productsGrid.innerHTML = '';
+    matches.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'product-card';
+        div.innerHTML = `
+            <div class="product-card-clickable" onclick="openProductDetails(${p.id})">
+                <img src="${p.images[0] || ''}" class="product-img" alt="${p.name}" loading="lazy">
+                <span class="product-card-category">${p.category}</span>
+                <h3 class="product-name">${p.name}</h3>
+                <p class="product-price">$${p.price.toFixed(2)}</p>
+            </div>
+            <button class="btn-add-cart" onclick="addToCart(${p.id})">Añadir al carrito ⋆</button>
+        `;
+        productsGrid.appendChild(div);
+    });
+}
+
+if (searchInput) {
+    searchInput.addEventListener('input', () => {
+        const val = searchInput.value;
+        if (searchClear) searchClear.classList.toggle('hidden', val.length === 0);
+        filterProducts(val);
+    });
+
+    // Enter no recarga la página (por si acaso)
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') e.preventDefault();
+    });
+}
+
+if (searchClear) {
+    searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        searchClear.classList.add('hidden');
+        filterProducts('');
+        searchInput.focus();
+    });
+}
+
 // INICIALIZAR
 document.addEventListener('DOMContentLoaded', () => {
     renderCatalog();

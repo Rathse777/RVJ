@@ -1619,7 +1619,7 @@ h1, h2, h3, h4, .logo-text {
 /* Responsive */
 @media (max-width: 700px) {
     .search-container {
-        order: 4;           /* baja la barra debajo en móvil */
+        order: 7;           /* baja la barra debajo en móvil */
         flex-basis: 100%;
         max-width: 100%;
         margin-top: 6px;
